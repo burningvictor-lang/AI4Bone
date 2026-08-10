@@ -57,3 +57,21 @@ python src/mcts_structure_design.py --material zn_1mg --site cortical
 python src/mg_alloy_baseline.py --alloy zn_1mg
 python src/mg_alloy_baseline.py --list-alloys
 ```
+
+## Web Demo
+选合金 + 骨部位 → 实时生成候选结构（模量/强度/降解周期 + 3×3×3 孔隙率矩阵 + LPBF 参数）。
+
+本地运行：
+```
+pip install -r requirements.txt
+python -m uvicorn web.main:app --host 127.0.0.1 --port 8765
+# 浏览器打开 http://127.0.0.1:8765
+```
+Docker 运行：
+```
+docker build -t ai4bone .
+docker run -p 8765:8765 ai4bone
+```
+API：
+- `GET /api/meta` — 合金/部位/工艺参数
+- `POST /api/design` — `{"material":"zn_1mg","site":"cortical","seed":42}` → 候选结构列表

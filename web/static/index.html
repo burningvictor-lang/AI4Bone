@@ -1,0 +1,138 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI4Bone · 可降解金属植入物设计</title>
+<style>
+  :root { --bg:#f6f8fb; --card:#ffffff; --ink:#1a2332; --muted:#6b7686; --accent:#2563eb; --accent2:#0ea5a4; --line:#e4e9f0; --ok:#16a34a; --warn:#d97706; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:"Microsoft YaHei",-apple-system,"Segoe UI",sans-serif; background:var(--bg); color:var(--ink); }
+  .wrap { max-width:1080px; margin:0 auto; padding:32px 20px 60px; }
+  header h1 { margin:0 0 6px; font-size:26px; letter-spacing:.3px; }
+  header p { margin:0 0 26px; color:var(--muted); font-size:14px; line-height:1.7; }
+  .grid { display:grid; grid-template-columns:340px 1fr; gap:20px; align-items:start; }
+  @media (max-width:820px){ .grid{grid-template-columns:1fr;} }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:20px; box-shadow:0 1px 2px rgba(16,24,40,.04); }
+  .card h2 { margin:0 0 14px; font-size:15px; }
+  label { display:block; font-size:13px; color:var(--muted); margin:14px 0 6px; }
+  select, button { width:100%; padding:10px 12px; font-size:14px; border:1px solid var(--line); border-radius:9px; background:#fff; font-family:inherit; }
+  select:focus, button:focus { outline:2px solid rgba(37,99,235,.25); border-color:var(--accent); }
+  button.primary { margin-top:20px; background:var(--accent); color:#fff; border:none; font-weight:600; cursor:pointer; }
+  button.primary:hover { background:#1d4ed8; }
+  button.primary:disabled { opacity:.55; cursor:wait; }
+  .hint { font-size:12px; color:var(--muted); margin-top:8px; line-height:1.6; }
+  .target-box { background:#f0f7f7; border:1px solid #cfe6e6; border-radius:9px; padding:12px 14px; font-size:13px; }
+  .target-box b { color:var(--accent2); }
+  table { width:100%; border-collapse:collapse; margin-top:8px; font-size:13px; }
+  th, td { padding:8px 6px; text-align:left; border-bottom:1px solid var(--line); }
+  th { color:var(--muted); font-weight:600; }
+  .tag { display:inline-block; padding:2px 8px; border-radius:20px; font-size:12px; }
+  .tag.mg { background:#e0ecfe; color:#1d4ed8; }
+  .tag.zn { background:#e6f7ef; color:#0f7a54; }
+  .empty { color:var(--muted); font-size:13px; padding:18px 0; }
+  .foot { margin-top:26px; color:var(--muted); font-size:12px; line-height:1.8; }
+  .spin { display:inline-block; width:14px; height:14px; border:2px solid rgba(255,255,255,.4); border-top-color:#fff; border-radius:50%; animation:sp .7s linear infinite; vertical-align:-2px; margin-right:6px; }
+  @keyframes sp { to { transform:rotate(360deg); } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>AI4Bone · 可降解金属植入物个性化设计</h1>
+    <p>基于蒙特卡洛树搜索 + 代理模型的镁/锌可降解金属骨植入物结构设计工具（GOAI 前沿探索赛道演示）。选择合金与骨部位，生成与骨组织模量匹配、降解周期接近成骨周期的候选结构。</p>
+  </header>
+
+  <div class="grid">
+    <div class="card">
+      <h2>设计参数</h2>
+      <label for="alloy">合金材料</label>
+      <select id="alloy"></select>
+      <label for="site">骨部位</label>
+      <select id="site"></select>
+      <button class="primary" id="run">生成设计方案</button>
+      <div class="hint" id="metaHint">加载中…</div>
+    </div>
+
+    <div class="card">
+      <h2>设计方案（Top 5 · 有限元验证，合成物理演示）</h2>
+      <div id="target"></div>
+      <div id="results"><div class="empty">选择参数后点击「生成设计方案」。</div></div>
+    </div>
+  </div>
+
+  <div class="foot">
+    说明：当前后端使用合成物理模型演示完整流程；正式版将替换为公开数据集（Zenodo records/17672235，600 样本）、真实有限元输出与 CNN 代理模型（专利：3×3×3 孔隙率体素化为 60³，卷积 16/8/4@3³，全连接 64/32）。LPBF 工艺建议：40–100 W，400–1200 mm/s。
+  </div>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+async function loadMeta() {
+  try {
+    const r = await fetch('/api/meta');
+    const m = await r.json();
+    const al = $('alloy'); al.innerHTML = '';
+    Object.entries(m.alloys).forEach(([k, v]) => {
+      al.appendChild(new Option(`${v.name}（${v.family.toUpperCase()}）`, k));
+    });
+    const st = $('site'); st.innerHTML = '';
+    Object.entries(m.sites).forEach(([k, v]) => {
+      st.appendChild(new Option(`${k} · 目标E=${v.E_MPa} MPa · ${v.T_min_days}-${v.T_max_days}天`, k));
+    });
+    const a = m.alloys[al.value];
+    $('metaHint').innerHTML = `WE43 镁：E=${a.E_MPa} MPa · YS=${a.yield_MPa} MPa；锌场景同管线切换材料参数即可。`;
+  } catch (e) {
+    $('metaHint').innerHTML = '后端未连接，请先运行 uvicorn。';
+  }
+}
+
+function drawTarget(t, matName) {
+  $('target').innerHTML = `
+    <div class="target-box">
+      目标（<b>${esc(matName)}</b> · ${esc(t.site_note)}）：
+      弹性模量 <b>${t.E_MPa} MPa</b> ｜ 降解周期 <b>${t.T_min_days}–${t.T_max_days} 天</b> ｜ 追求高屈服强度
+    </div>`;
+}
+
+function drawResults(cands, lpbf) {
+  const rows = cands.map(c => `
+    <tr>
+      <td>${c.score.toFixed(3)}</td>
+      <td>${c.E_MPa.toFixed(0)}</td>
+      <td>${c.YS_MPa.toFixed(1)}</td>
+      <td>${c.T_deg_days.toFixed(0)}</td>
+      <td>${(c.porosity_mean * 100).toFixed(1)}%</td>
+    </tr>`).join('');
+  $('results').innerHTML = `
+    <table>
+      <tr><th>评分</th><th>模量 E (MPa)</th><th>屈服强度 (MPa)</th><th>降解周期 (天)</th><th>平均孔隙率</th></tr>
+      ${rows}
+    </table>
+    <div class="hint">LPBF 工艺建议：${lpbf.power_W[0]}–${lpbf.power_W[1]} W，${lpbf.speed_mm_per_s[0]}–${lpbf.speed_mm_per_s[1]} mm/s。</div>`;
+}
+
+$('run').addEventListener('click', async () => {
+  const btn = $('run'); btn.disabled = true; btn.innerHTML = '<span class="spin"></span>设计中…';
+  try {
+    const r = await fetch('/api/design', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({material: $('alloy').value, site: $('site').value, seed: 42}),
+    });
+    const d = await r.json();
+    if (d.error) { $('results').innerHTML = `<div class="empty">${esc(d.error)}</div>`; return; }
+    drawTarget(d.target, d.material_name);
+    drawResults(d.candidates, d.lpbf);
+  } catch (e) {
+    $('results').innerHTML = `<div class="empty">请求失败：${esc(e.message)}</div>`;
+  } finally {
+    btn.disabled = false; btn.textContent = '生成设计方案';
+  }
+});
+
+loadMeta();
+</script>
+</body>
+</html>

@@ -4,4 +4,6 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 COPY src/ src/
 COPY data/ data/
-CMD ["python", "src/mcts_structure_design.py"]
+COPY web/ web/
+EXPOSE 8765
+CMD ["python", "-m", "uvicorn", "web.main:app", "--host", "0.0.0.0", "--port", "8765"]
