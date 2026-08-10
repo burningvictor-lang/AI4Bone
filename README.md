@@ -16,9 +16,13 @@ python src/phage_baseline.py
 ```
 
 ## 数据
-- 正式镁合金数据集：Zenodo `records/17672235`（DatasetMg_imputed.csv，410 个样本）
+- 正式镁合金数据集：Zenodo `records/17672235`（DatasetMg_imputed.csv，600 个样本）
   下载后放到 `data/DatasetMg_imputed.csv`（已在 .gitignore 中排除）。
 - `data/mg_alloy_sample.csv` 与 `data/lysin_candidates.txt` 为占位演示数据，用于验证流程。
+
+## 模型
+- 成分-性能预测优先使用随机森林（scikit-learn，R²≈0.80）；无 sklearn 时自动回退线性 ridge。
+- 真实数据集清洗：特征空值按中位数填充；缺目标值的 28 行剔除（600→572 行）。
 
 ## 可复现
 固定随机种子（SEED=42）、公开数据、Dockerfile、依赖锁定（requirements.txt）。
