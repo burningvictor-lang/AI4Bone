@@ -228,7 +228,7 @@ def main():
     run_mg_pipeline()
     print("\nNote: Mg dataset covers Mg compositions only. Zinc composition modeling needs a "
           "separate curated dataset (deferred to semi-final). Structure design itself is "
-          "alloy-agnostic via materials_lib.json + mcts_structure_design.py --material.")
+          "alloy-agnostic via materials_lib.json + structure_design.py --material.")
     print("Next: add SHAP + NSGA-II.")
 
 if __name__ == "__main__":

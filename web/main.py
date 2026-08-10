@@ -1,4 +1,4 @@
-﻿"""AI4Bone - Web Demo backend (FastAPI).
+"""AI4Bone - Web Demo backend (FastAPI).
 Run: uvicorn web.main:app --host 127.0.0.1 --port 8765
 """
 import os, sys
@@ -9,7 +9,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 SRC = os.path.join(os.path.dirname(HERE), "src")
 if SRC not in sys.path:
     sys.path.insert(0, SRC)
-from mcts_structure_design import design, MATERIALS, SITES, LPBF  # noqa: E402
+from structure_design import design, MATERIALS, SITES, LPBF  # noqa: E402
 
 app = FastAPI(title="AI4Bone Design API", version="0.1.0")
 

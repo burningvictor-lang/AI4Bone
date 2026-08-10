@@ -3,14 +3,14 @@
 面向骨缺损修复的可降解金属植入物设计与抗感染辅助工具（GOAI 世界人工智能开源大赛 · 前沿探索赛道）。
 
 ## 模块
-- `src/mcts_structure_design.py` —— 模块 A：基于蒙特卡洛树搜索的可降解金属植入物设计（对应自有专利《一种基于蒙特卡洛树搜索的可降解金属骨科植入物设计方法》）
+- `src/structure_design.py` —— 模块 A：面向可降解金属植入物的结构设计与多目标优化
 - `src/mg_alloy_baseline.py` —— 模块 A 扩展：镁合金成分-性能预测与逆向设计基线
 - `src/phage_baseline.py` —— 模块 B：噬菌体内溶素候选排序（骨架）
 
 ## 运行
 ```
 pip install -r requirements.txt
-python src/mcts_structure_design.py
+python src/structure_design.py
 python src/mg_alloy_baseline.py
 python src/phage_baseline.py
 ```
@@ -46,14 +46,14 @@ python src/phage_baseline.py
 
 
 ## 双合金场景（镁 / 锌）
-- 结构设计管线为「合金无关」：同一套 MCTS 流程可适配镁（WE43）与锌（纯 Zn、Zn-1Mg），
+- 结构设计管线为「合金无关」：同一套树搜索流程可适配镁（WE43）与锌（纯 Zn、Zn-1Mg），
   材料参数（E、屈服强度、降解时间尺度）来自 `data/materials_lib.json`（文献参考值，正式版以公开数据/实测为准）。
 - 镁成分-性能回归使用镁数据集（Zenodo records/17672235）；锌成分建模需单独数据集，留待复赛文献挖掘补充。
 
 ### 运行示例
 ```
-python src/mcts_structure_design.py                        # we43_mg / cancellous
-python src/mcts_structure_design.py --material zn_1mg --site cortical
+python src/structure_design.py                        # we43_mg / cancellous
+python src/structure_design.py --material zn_1mg --site cortical
 python src/mg_alloy_baseline.py --alloy zn_1mg
 python src/mg_alloy_baseline.py --list-alloys
 ```

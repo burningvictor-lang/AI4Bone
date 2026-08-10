@@ -1,7 +1,11 @@
-﻿__pycache__/
+__pycache__/
 *.pyc
 .venv/
 venv/
 data/DatasetMg_imputed.csv
 *.log
 .DS_Store
+
+# local demo server logs
+.demo/
+__pycache__/

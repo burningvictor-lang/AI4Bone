@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-Module A core: MCTS-based personalized biodegradable implant design.
-Implements the patent workflow (simplified, numpy-only demo):
+Module A core: tree-search-based personalized biodegradable implant design.
+Implements the design workflow (simplified, numpy-only demo):
   patient targets -> initial structures (3x3x3 porosity) -> "FEM" labels
-  -> surrogate model -> Monte Carlo Tree Search sampling -> t-SNE-style diversity
+  -> surrogate model -> tree-search sampling -> t-SNE-style diversity
   -> FEM verify + dataset augmentation -> iterative active learning.
 
 The physics below is a SYNTHETIC stand-in for real finite-element simulation.
@@ -14,10 +14,10 @@ Alloy-agnostic: material parameters (E0, YS0, degradation time scale) come from
 data/materials_lib.json, so the same pipeline runs for Mg and Zn alloys.
 
 CLI:
-  python mcts_structure_design.py                          # we43_mg / cancellous
-  python mcts_structure_design.py --material zn_1mg --site cortical
+  python structure_design.py                          # we43_mg / cancellous
+  python structure_design.py --material zn_1mg --site cortical
 API:
-  from mcts_structure_design import design
+  from structure_design import design
   design(material="zn_1mg", site="cortical", seed=42)
 """
 import os, json, argparse
@@ -35,8 +35,8 @@ SITES = _lib["sites"]
 LPBF = {"power_W": [40, 100], "speed_mm_per_s": [400, 1200]}
 
 
-def design(material="we43_mg", site="cancellous", seed=SEED, n_init=100, mcts_iters=100, top_k=5):
-    """Run the MCTS design pipeline and return structured results (dict)."""
+def design(material="we43_mg", site="cancellous", seed=SEED, n_init=100, search_iters=100, top_k=5):
+    """Run the tree-search design pipeline and return structured results (dict)."""
     rng = np.random.default_rng(seed)
     mat = MATERIALS[material]
     site_cfg = SITES[site]
@@ -85,7 +85,7 @@ def design(material="we43_mg", site="cancellous", seed=SEED, n_init=100, mcts_it
         y[i] = np.clip(y[i] + rng_.choice([-0.1, 0.1]), 0.2, 0.9)
         return y
 
-    def mcts(root, iters=mcts_iters, rng_=None):
+    def tree_search(root, iters=search_iters, rng_=None):
         rng_ = rng_ or rng
         cur = root.copy()
         best = (score(predict_vec(cur[None, :], models)[0]), cur.copy())
@@ -103,7 +103,7 @@ def design(material="we43_mg", site="cancellous", seed=SEED, n_init=100, mcts_it
     roots = np.argsort([score(predict_vec(X_init[i:i + 1], models)[0]) for i in range(n_init)])[-5:]
     candidates = []
     for r in roots:
-        s, best_mat = mcts(X_init[r].copy())
+        s, best_mat = tree_search(X_init[r].copy())
         candidates.append((s, best_mat))
     candidates.sort(key=lambda t: -t[0])
 
@@ -131,12 +131,12 @@ def design(material="we43_mg", site="cancellous", seed=SEED, n_init=100, mcts_it
 
 
 def main():
-    ap = argparse.ArgumentParser(description="Module A: MCTS implant structure design (alloy-agnostic demo)")
+    ap = argparse.ArgumentParser(description="Module A: tree-search implant structure design (alloy-agnostic demo)")
     ap.add_argument("--material", default="we43_mg", choices=list(MATERIALS))
     ap.add_argument("--site", default="cancellous", choices=list(SITES))
     args = ap.parse_args()
     res = design(material=args.material, site=args.site)
-    print("MCTS design result (top 5, FEM-verified with synthetic physics)")
+    print("Structure design result - tree search (top 5, FEM-verified with synthetic physics)")
     print(f"  material={res['material']} ({res['material_name']}), site={res['site']}")
     t = res["target"]
     print(f"  target E={t['E_MPa']} MPa, T in [{t['T_min_days']},{t['T_max_days']}] days, maximize YS")
@@ -144,7 +144,7 @@ def main():
         print(f"  score={c['score']:.3f}  E={c['E_MPa']:7.1f} MPa  YS={c['YS_MPa']:6.1f} MPa  "
               f"T_deg={c['T_deg_days']:6.1f} days  p={c['porosity_mean']:.3f}")
     print("\nOK. Production: replace synthetic FEM with Abaqus simulation, surrogate with CNN "
-          "(patent: 3x3x3 porosity voxelized to 60x60x60, conv 16/8/4 @3x3x3, FC 64/32), "
+          "(3x3x3 porosity voxelized to 60x60x60, conv 16/8/4 @3x3x3, FC 64/32), "
           "add t-SNE diversity selection + active-learning augmentation loop.")
 
 
