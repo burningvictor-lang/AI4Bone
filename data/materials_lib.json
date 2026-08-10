@@ -1,0 +1,40 @@
+﻿{
+  "_comment": "材料参数库（演示用文献参考值，正式版以公开数据/实测为准）。E_MPa=基体弹性模量；yield_MPa=屈服强度；corrosion_mm_per_year=腐蚀速率量级；deg_scale_days=合成降解模型的时间尺度；sites=按部位的设计目标（目标模量、降解周期窗口）。",
+  "sites": {
+    "cancellous":    { "E_MPa": 3000,  "T_min_days": 90,  "T_max_days": 120, "note": "非承重松质骨：高孔隙率、促骨长入" },
+    "cortical":      { "E_MPa": 18000, "T_min_days": 180, "T_max_days": 270, "note": "承重皮质骨：高模量低孔隙率外层、梯度过渡" },
+    "periarticular": { "E_MPa": 8000,  "T_min_days": 120, "T_max_days": 180, "note": "围关节：解剖形态重建 + 力学传导稳定" }
+  },
+  "materials": {
+    "we43_mg": {
+      "name": "WE43 (Mg-4Y-3RE-0.5Zr)",
+      "family": "mg",
+      "E_MPa": 44000,
+      "yield_MPa": 200,
+      "corrosion_mm_per_year": 0.30,
+      "deg_scale_days": 360,
+      "source": "团队62例围关节临床基础+文献参考值（演示）",
+      "verified": false
+    },
+    "pure_zn": {
+      "name": "纯锌 (Zn)",
+      "family": "zn",
+      "E_MPa": 95000,
+      "yield_MPa": 60,
+      "corrosion_mm_per_year": 0.06,
+      "deg_scale_days": 720,
+      "source": "文献参考值：纯锌强度偏低、降解偏慢，通常需合金化（演示）",
+      "verified": false
+    },
+    "zn_1mg": {
+      "name": "Zn-1Mg",
+      "family": "zn",
+      "E_MPa": 90000,
+      "yield_MPa": 170,
+      "corrosion_mm_per_year": 0.15,
+      "deg_scale_days": 720,
+      "source": "文献参考值：Zn-Mg系提升强度、降解可控（演示）",
+      "verified": false
+    }
+  }
+}
