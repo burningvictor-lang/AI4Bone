@@ -83,6 +83,88 @@ def _patient_plan(defect_length_mm, canal_diameter_mm, cortical_ratio, ideal_por
     }
 
 
+def _mechanics_summary(candidate, patient, site, target_e, target_t_mid):
+    """Build a transparent mechanics/FEM summary for the top candidate."""
+    site_loads = {"cancellous": 350.0, "cortical": 1200.0, "periarticular": 800.0}
+    load_n = site_loads.get(site, 500.0)
+    diameter = patient["canal_diameter_mm"]
+    length = patient["defect_length_mm"]
+    porosity = candidate["porosity_mean"]
+    solid_fraction = max(1.0 - porosity, 0.08)
+    area_mm2 = math.pi * (diameter / 2.0) ** 2
+    effective_area = area_mm2 * solid_fraction
+
+    anisotropy_ratio = round(0.55 + 0.35 * patient["cortical_ratio"], 3)
+    stress_concentration = 1.8 + 0.7 * (1.0 - patient["cortical_ratio"])
+    max_stress = load_n / max(effective_area, 1.0) * stress_concentration
+    displacement = load_n * length / max(candidate["E_MPa"] * effective_area, 1.0)
+    safety_factor = candidate["YS_MPa"] / max(max_stress, 0.1)
+    stress_shielding = abs(candidate["E_MPa"] - target_e) / max(target_e, 1.0)
+
+    rows, cols = 6, 9
+    raw_map = []
+    for row in range(rows):
+        values = []
+        for col in range(cols):
+            hotspot = math.exp(-(((row - 2.3) / 1.7) ** 2 + ((col - 5.8) / 2.2) ** 2))
+            interface = 0.22 * math.exp(-((col - 1.0) / 1.4) ** 2)
+            values.append(0.18 + 0.74 * hotspot + interface + 0.025 * row)
+        raw_map.append(values)
+    raw_max = max(max(row) for row in raw_map)
+    stress_map = [
+        [round(max_stress * value / raw_max, 2) for value in row]
+        for row in raw_map
+    ]
+
+    target_days = target_t_mid
+    time_days = [0, 30, 60, 90, 120, 180]
+    implant_support = []
+    tissue_support = []
+    combined_support = []
+    for day in time_days:
+        implant = 1.35 * load_n * math.exp(-0.70 * day / max(candidate["T_deg_days"], 30.0))
+        tissue = 1.10 * load_n / (
+            1.0 + math.exp(-(day - 0.55 * target_days) / max(0.16 * target_days, 8.0))
+        )
+        implant_support.append(round(implant, 1))
+        tissue_support.append(round(tissue, 1))
+        combined_support.append(round(implant + tissue, 1))
+
+    return {
+        "model_basis": [
+            "CT 灰度/体积分数用于描述局部骨量空间变化",
+            "结构张量用于描述松质骨主方向与各向异性",
+            "植入物采用近端—核心—远端连续梯度参数",
+        ],
+        "boundary_conditions": {
+            "load_case": "轴向压缩 + 界面弯曲敏感性筛查",
+            "load_N": load_n,
+            "constraint": "远端截面固定，近端沿解剖轴施加载荷",
+            "contact": "骨—植入物界面采用绑定接触演示；正式版进行摩擦敏感性分析",
+        },
+        "outputs": {
+            "max_von_mises_MPa": round(max_stress, 2),
+            "max_displacement_mm": round(displacement, 3),
+            "safety_factor": round(safety_factor, 2),
+            "stress_shielding_ratio": round(stress_shielding, 3),
+            "anisotropy_ratio_transverse_to_axial": anisotropy_ratio,
+        },
+        "stress_map_MPa": stress_map,
+        "time_series": {
+            "days": time_days,
+            "implant_support_N": implant_support,
+            "tissue_support_N": tissue_support,
+            "combined_support_N": combined_support,
+            "required_support_N": [load_n for _ in time_days],
+        },
+        "acceptance": {
+            "stress_below_yield": max_stress < candidate["YS_MPa"],
+            "safety_factor_ge_1_5": safety_factor >= 1.5,
+            "combined_support_maintained": min(combined_support) >= load_n,
+        },
+        "note": "当前云图与时间序列为合成力学演示；正式版需用患者网格、真实载荷边界和经验证材料本构替换。",
+    }
+
 def design(
     material="we43_mg",
     site="cancellous",
@@ -236,6 +318,11 @@ def design(
             }
         )
 
+    mechanics = _mechanics_summary(
+        output[0], patient, site, target_e,
+        0.5 * (target_t_min + target_t_max),
+    )
+
     return {
         "material": material,
         "material_name": mat["name"],
@@ -255,6 +342,7 @@ def design(
             "有限元与可制造性联合筛选",
         ],
         "lpbf": LPBF,
+        "mechanics_model": mechanics,
         "candidates": output,
         "note": "当前为合成物理演示；正式版需接入真实患者影像、有限元结果和打印验证数据。",
     }

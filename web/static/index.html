@@ -51,11 +51,35 @@ th{color:var(--muted);font-weight:600}
 .layer{display:grid;grid-template-columns:repeat(3,22px);gap:3px}
 .voxel{width:22px;height:22px;border-radius:4px;border:1px solid rgba(25,74,115,.12)}
 .legend{font-size:10px;color:var(--muted);margin-top:7px}
+.mechanics{margin-top:20px;padding:22px}
+.mechanics-head{display:flex;justify-content:space-between;gap:20px;align-items:flex-start;margin-bottom:15px}
+.mechanics-head h2{font-size:18px;margin:0 0 5px}
+.mechanics-head p{font-size:12px;color:var(--muted);margin:0;line-height:1.6}
+.demo-tag{white-space:nowrap;background:#fff4e9;color:#a64517;border:1px solid #f3c5a8;border-radius:999px;padding:7px 11px;font-size:11px;font-weight:700}
+.mechanics-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.mechanics-card{border:1px solid var(--line);border-radius:11px;padding:13px;background:#fbfdff;min-height:132px}
+.mechanics-card h3{font-size:13px;margin:0 0 9px;color:#1769d2}
+.mechanics-card ul{padding-left:17px;margin:0;color:#52667d;font-size:11px;line-height:1.65}
+.metric-list{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.metric{background:#eef6fd;border-radius:7px;padding:8px}
+.metric b{display:block;color:#0a5cab;font-size:15px;margin-bottom:2px}.metric span{font-size:10px;color:var(--muted)}
+.accept{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}.accept span{font-size:10px;border-radius:999px;padding:4px 7px;background:#e8f7f2;color:#08705d;border:1px solid #bce6d9}
+.mechanics-viz{display:grid;grid-template-columns:350px 1fr;gap:18px;margin-top:16px}
+.viz-box{border:1px solid var(--line);border-radius:11px;padding:13px;background:white;overflow:hidden}
+.viz-box h3{font-size:12px;margin:0 0 10px;color:#344963}
+.stress-grid{display:grid;grid-template-columns:repeat(9,1fr);gap:3px;aspect-ratio:1.7}
+.stress-cell{border-radius:3px;min-height:23px}
+.stress-legend{height:7px;border-radius:999px;margin-top:8px;background:linear-gradient(90deg,#d8eef6,#67b5ce,#f0b05c,#d9533f)}
+.stress-scale{display:flex;justify-content:space-between;color:var(--muted);font-size:9px;margin-top:3px}
+.support-chart{width:100%;height:214px;display:block}
+.chart-legend{display:flex;gap:14px;flex-wrap:wrap;font-size:10px;color:var(--muted)}
+.chart-key{display:inline-flex;align-items:center;gap:5px}.chart-key i{display:block;width:14px;height:3px;border-radius:3px}
+.mechanics-note{font-size:11px;color:var(--muted);line-height:1.65;margin:12px 2px 0}
 .empty{color:var(--muted);font-size:13px;padding:24px 0}
 .foot{font-size:12px;color:var(--muted);line-height:1.7;margin-top:20px;padding:0 4px}
 .spin{display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,.45);border-top-color:white;border-radius:50%;animation:spin .7s linear infinite;vertical-align:-2px;margin-right:6px}
 @keyframes spin{to{transform:rotate(360deg)}}
-@media(max-width:900px){header{display:block}.badge{display:inline-block;margin-top:14px}.main{grid-template-columns:1fr}.steps{grid-template-columns:1fr}.results-layout{grid-template-columns:1fr}.zones{grid-template-columns:1fr}}
+@media(max-width:900px){header{display:block}.badge{display:inline-block;margin-top:14px}.main{grid-template-columns:1fr}.steps{grid-template-columns:1fr}.results-layout{grid-template-columns:1fr}.zones,.mechanics-grid{grid-template-columns:1fr}.mechanics-viz{grid-template-columns:1fr}.mechanics-head{display:block}.demo-tag{display:inline-block;margin-top:9px}}
 </style>
 </head>
 <body>
@@ -121,6 +145,14 @@ th{color:var(--muted);font-weight:600}
     <div id="results"><div class="empty">尚未运行。</div></div>
   </section>
 </div>
+
+<section class="card mechanics" id="mechanicsSection" hidden>
+  <div class="mechanics-head">
+    <div><h2>力学与有限元建模</h2><p>将 CT 体积分数、结构张量和各向异性主方向纳入候选结构评价，并跟踪植入物降解与组织修复的承载接力。</p></div>
+    <div class="demo-tag">合成力学演示</div>
+  </div>
+  <div id="mechanicsContent"></div>
+</section>
 
 <div class="foot">
   边界说明：当前版本以几何参数代替真实 DICOM 分割，并使用合成物理模型演示完整流程。正式版本将接入匿名化 DICOM/NIfTI、分割模型、真实有限元结果及打印验证数据。默认采用单一合金体系内的空间梯度结构，避免将尚未验证的镁/锌多材料共打印作为既定能力。
@@ -203,6 +235,62 @@ function renderResults(data){
   <div class="hint">LPBF 初筛窗口：${data.lpbf.power_W[0]}–${data.lpbf.power_W[1]} W，${data.lpbf.speed_mm_per_s[0]}–${data.lpbf.speed_mm_per_s[1]} mm/s。该窗口需通过设备与粉末标定后使用。</div>`;
 }
 
+function heatColor(value,maxValue){
+  const t=Math.max(0,Math.min(1,value/Math.max(maxValue,0.1)));
+  const hue=200-190*t;
+  const light=90-34*t;
+  return `hsl(${hue} 68% ${light}%)`;
+}
+
+function linePath(values,maxValue,width=620,height=180){
+  const left=42,right=12,top=12,bottom=27;
+  return values.map((value,index)=>{
+    const x=left+index*(width-left-right)/(values.length-1);
+    const y=top+(maxValue-value)*(height-top-bottom)/maxValue;
+    return `${index?'L':'M'}${x.toFixed(1)},${y.toFixed(1)}`;
+  }).join(' ');
+}
+
+function renderMechanics(model){
+  if(!model) return;
+  const out=model.outputs, bc=model.boundary_conditions, ts=model.time_series;
+  const stressMax=Math.max(...model.stress_map_MPa.flat());
+  const chartMax=Math.ceil(Math.max(...ts.combined_support_N,...ts.required_support_N)/100)*100;
+  const colors=['#1769d2','#0b8fa5','#e76f32','#7a8797'];
+  const allPass=Object.values(model.acceptance).every(Boolean);
+  const svgWidth=620,svgHeight=180;
+  const gridLines=[0,.25,.5,.75,1].map(f=>{
+    const y=12+f*(svgHeight-39);
+    const label=Math.round(chartMax*(1-f));
+    return `<line x1="42" x2="608" y1="${y}" y2="${y}" stroke="#e4edf5"/><text x="36" y="${y+3}" text-anchor="end" font-size="9" fill="#7a8797">${label}</text>`;
+  }).join('');
+  const dayLabels=ts.days.map((day,index)=>{
+    const x=42+index*(svgWidth-54)/(ts.days.length-1);
+    return `<text x="${x}" y="174" text-anchor="middle" font-size="9" fill="#7a8797">${day} d</text>`;
+  }).join('');
+  $('mechanicsContent').innerHTML=`
+    <div class="mechanics-grid">
+      <div class="mechanics-card"><h3>非均质各向异性本构</h3><ul>${model.model_basis.map(item=>`<li>${esc(item)}</li>`).join('')}</ul></div>
+      <div class="mechanics-card"><h3>载荷与边界条件</h3><ul><li>${esc(bc.load_case)}，${bc.load_N} N</li><li>${esc(bc.constraint)}</li><li>${esc(bc.contact)}</li></ul></div>
+      <div class="mechanics-card"><h3>有限元评价指标</h3><div class="metric-list">
+        <div class="metric"><b>${out.max_von_mises_MPa} MPa</b><span>最大等效应力</span></div>
+        <div class="metric"><b>${out.max_displacement_mm} mm</b><span>最大位移</span></div>
+        <div class="metric"><b>${out.safety_factor}</b><span>安全系数</span></div>
+        <div class="metric"><b>${out.anisotropy_ratio_transverse_to_axial}</b><span>横/纵各向异性比</span></div>
+      </div><div class="accept"><span>${allPass?'✓':'!'} 联合判据${allPass?'通过':'需复核'}</span><span>应力屏蔽 ${out.stress_shielding_ratio}</span></div></div>
+    </div>
+    <div class="mechanics-viz">
+      <div class="viz-box"><h3>等效应力分布（MPa）</h3><div class="stress-grid">${model.stress_map_MPa.flat().map(value=>`<div class="stress-cell" title="${value} MPa" style="background:${heatColor(value,stressMax)}"></div>`).join('')}</div><div class="stress-legend"></div><div class="stress-scale"><span>0</span><span>${stressMax.toFixed(1)} MPa</span></div></div>
+      <div class="viz-box"><h3>降解—组织修复承载接力</h3><svg class="support-chart" viewBox="0 0 ${svgWidth} ${svgHeight}" role="img" aria-label="植入物与组织承载能力随时间变化">${gridLines}${dayLabels}
+        <path d="${linePath(ts.implant_support_N,chartMax)}" fill="none" stroke="${colors[0]}" stroke-width="3"/>
+        <path d="${linePath(ts.tissue_support_N,chartMax)}" fill="none" stroke="${colors[1]}" stroke-width="3"/>
+        <path d="${linePath(ts.combined_support_N,chartMax)}" fill="none" stroke="${colors[2]}" stroke-width="3.5"/>
+        <path d="${linePath(ts.required_support_N,chartMax)}" fill="none" stroke="${colors[3]}" stroke-width="2" stroke-dasharray="7 5"/>
+      </svg><div class="chart-legend"><span class="chart-key"><i style="background:${colors[0]}"></i>植入物</span><span class="chart-key"><i style="background:${colors[1]}"></i>修复组织</span><span class="chart-key"><i style="background:${colors[2]}"></i>联合承载</span><span class="chart-key"><i style="background:${colors[3]}"></i>最低需求</span></div></div>
+    </div><p class="mechanics-note">${esc(model.note)}</p>`;
+  $('mechanicsSection').hidden=false;
+}
+
 $('run').addEventListener('click',async()=>{
   const button=$('run');
   button.disabled=true;
@@ -225,6 +313,7 @@ $('run').addEventListener('click',async()=>{
     renderTarget(data);
     renderZones(data.patient_geometry.zones);
     renderResults(data);
+    renderMechanics(data.mechanics_model);
   }catch(error){
     $('results').innerHTML=`<div class="empty">运行失败：${esc(error.message)}</div>`;
   }finally{
