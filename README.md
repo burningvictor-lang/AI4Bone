@@ -1,77 +1,84 @@
 # AI4Bone
 
-面向骨缺损修复的可降解金属植入物设计与抗感染辅助工具（GOAI 世界人工智能开源大赛 · 前沿探索赛道）。
+AI4Bone 是面向骨缺损修复的患者特异性可降解金属植入物设计工具，参赛方向为 GOAI 世界人工智能开源大赛「AI for Research」。项目以镁合金和锌合金为应用场景，将患者缺损几何、局部骨质和力学目标转化为空间梯度孔隙结构，并输出候选结构与增材制造初筛参数。
+
+![AI4Bone 患者特异性设计 Demo](docs/AI4Bone_demo_patient_specific.png)
+
+## 核心流程
+
+1. DICOM/CT 导入与质量控制；
+2. 皮质骨、松质骨及缺损区域分割；
+3. 缺损包络重建与近端—核心—远端空间分区；
+4. 孔隙率、孔径和杆径的非均质结构设计；
+5. 力学、降解和可制造性联合筛选；
+6. LPBF 打印及体外/动物实验验证。
+
+当前演示版使用缺损长度、髓腔直径和皮质骨比例代替真实影像分割结果，并使用透明的合成物理模型演示完整计算链。正式版本将接入匿名化 DICOM/NIfTI、真实有限元结果和打印验证数据。
 
 ## 模块
-- `src/structure_design.py` —— 模块 A：面向可降解金属植入物的结构设计与多目标优化
-- `src/mg_alloy_baseline.py` —— 模块 A 扩展：镁合金成分-性能预测与逆向设计基线
-- `src/phage_baseline.py` —— 模块 B：噬菌体内溶素候选排序（骨架）
 
-## 运行
-```
+- `src/structure_design.py`：患者特异性空间梯度结构设计与候选筛选。
+- `src/mg_alloy_baseline.py`：镁合金成分—性能预测与逆向设计基线。
+- `src/phage_baseline.py`：感染性骨缺损内溶素候选排序骨架。
+- `web/main.py`：FastAPI 后端。
+- `web/static/index.html`：交互式 Web Demo。
+- `data/materials_lib.json`：镁/锌材料参数与骨组织目标库。
+
+## 镁合金与锌合金场景
+
+结构设计框架对材料体系保持一致，材料的弹性模量、屈服强度和降解时间尺度由 `data/materials_lib.json` 注入。默认采用**单一合金体系内的空间梯度结构**；镁/锌多材料共打印仅作为后续研究方向，不作为当前已验证能力。
+
+- 镁合金成分—性能模型使用 Zenodo 数据集 `DatasetMg_imputed.csv`。
+- 原始数据含 600 行、28 列；清洗后保留 572 个有效样本。
+- 锌合金成分模型仍需独立数据集，现阶段以材料参数库支持结构场景切换。
+
+数据集：[Zenodo record 17672235](https://zenodo.org/records/17672235)
+
+## 本地运行
+
+```bash
 pip install -r requirements.txt
-python src/structure_design.py
+python -m uvicorn web.main:app --host 127.0.0.1 --port 8765
+```
+
+浏览器打开：<http://127.0.0.1:8765>
+
+命令行示例：
+
+```bash
+python src/structure_design.py --material we43_mg --site cancellous \
+  --defect-length 40 --canal-diameter 18 --cortical-ratio 0.35
+
+python src/structure_design.py --material zn_1mg --site cortical
 python src/mg_alloy_baseline.py
 python src/phage_baseline.py
 ```
 
-## 数据
-- 正式镁合金数据集：Zenodo `records/17672235`（DatasetMg_imputed.csv，600 个样本）
-  下载后放到 `data/DatasetMg_imputed.csv`（已在 .gitignore 中排除）。
-- `data/mg_alloy_sample.csv` 与 `data/lysin_candidates.txt` 为占位演示数据，用于验证流程。
+## API
 
-## 模型
-- 成分-性能预测优先使用随机森林（scikit-learn，R²≈0.80）；无 sklearn 时自动回退线性 ridge。
-- 真实数据集清洗：特征空值按中位数填充；缺目标值的 28 行剔除（600→572 行）。
+- `GET /api/meta`：材料、骨组织目标和 LPBF 初筛参数。
+- `POST /api/design`：生成患者特异性候选结构。
 
-## 可复现
-固定随机种子（SEED=42）、公开数据、Dockerfile、依赖锁定（requirements.txt）。
+请求示例：
 
-## Git / GitHub 推送
-本地仓库已完成 `git init` 与首次提交（main 分支）。
-推到 GitHub：
-1. 在 GitHub 新建空仓库（例如 `AI4Bone`，不要勾选 README/LICENSE 初始化）。
-2. 在仓库根目录执行：
-   ```
-   git remote add origin https://github.com/<你的用户名>/AI4Bone.git
-   git push -u origin main
-   ```
-3. 日常提交：
-   ```
-   git add -A
-   git commit -m "描述本次改动"
-   git push
-   ```
-首次推送会提示登录，按窗口用你的 GitHub 账号登录即可。
-
-
-## 双合金场景（镁 / 锌）
-- 结构设计管线为「合金无关」：同一套树搜索流程可适配镁（WE43）与锌（纯 Zn、Zn-1Mg），
-  材料参数（E、屈服强度、降解时间尺度）来自 `data/materials_lib.json`（文献参考值，正式版以公开数据/实测为准）。
-- 镁成分-性能回归使用镁数据集（Zenodo records/17672235）；锌成分建模需单独数据集，留待复赛文献挖掘补充。
-
-### 运行示例
-```
-python src/structure_design.py                        # we43_mg / cancellous
-python src/structure_design.py --material zn_1mg --site cortical
-python src/mg_alloy_baseline.py --alloy zn_1mg
-python src/mg_alloy_baseline.py --list-alloys
+```json
+{
+  "material": "we43_mg",
+  "site": "cancellous",
+  "defect_length_mm": 40,
+  "canal_diameter_mm": 18,
+  "cortical_ratio": 0.35,
+  "seed": 42
+}
 ```
 
-## Web Demo
-选合金 + 骨部位 → 实时生成候选结构（模量/强度/降解周期 + 3×3×3 孔隙率矩阵 + LPBF 参数）。
+## 可复现性与边界
 
-本地运行：
-```
-pip install -r requirements.txt
-python -m uvicorn web.main:app --host 127.0.0.1 --port 8765
-# 浏览器打开 http://127.0.0.1:8765
-```
-Docker 运行：
-```
-docker build -t ai4bone .
-docker run -p 8765:8765 ai4bone
-```
-API：
-- `GET /api/meta` — 合金/部位/工艺参数
-- `POST /api/design` — `{"material":"zn_1mg","site":"cortical","seed":42}` → 候选结构列表
+- 固定随机种子：`SEED=42`。
+- 镁合金数据集文件被 `.gitignore` 排除，README 提供公开下载地址。
+- 当前有限元输出为合成物理演示，不代表临床结论。
+- LPBF 参数为筛选性窗口，正式打印前须按设备、粉末和试样进行标定。
+
+## License
+
+MIT

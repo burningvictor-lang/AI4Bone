@@ -1,7 +1,7 @@
-"""AI4Bone - Web Demo backend (FastAPI).
-Run: uvicorn web.main:app --host 127.0.0.1 --port 8765
-"""
-import os, sys
+"""AI4Bone web demo backend."""
+import os
+import sys
+
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
@@ -9,18 +9,26 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 SRC = os.path.join(os.path.dirname(HERE), "src")
 if SRC not in sys.path:
     sys.path.insert(0, SRC)
-from structure_design import design, MATERIALS, SITES, LPBF  # noqa: E402
 
-app = FastAPI(title="AI4Bone Design API", version="0.1.0")
+from structure_design import design, LPBF, MATERIALS, SITES  # noqa: E402
+
+app = FastAPI(title="AI4Bone Design API", version="0.2.0")
 
 
 @app.get("/api/meta")
 def meta():
     return {
-        "alloys": {k: {"name": v["name"], "family": v["family"], "E_MPa": v["E_MPa"],
-                       "yield_MPa": v["yield_MPa"], "corrosion_mm_per_year": v["corrosion_mm_per_year"]}
-                   for k, v in MATERIALS.items()},
-        "sites": {k: v for k, v in SITES.items()},
+        "alloys": {
+            key: {
+                "name": value["name"],
+                "family": value["family"],
+                "E_MPa": value["E_MPa"],
+                "yield_MPa": value["yield_MPa"],
+                "corrosion_mm_per_year": value["corrosion_mm_per_year"],
+            }
+            for key, value in MATERIALS.items()
+        },
+        "sites": SITES,
         "lpbf": LPBF,
     }
 
@@ -29,12 +37,26 @@ def meta():
 def run_design(payload: dict):
     material = payload.get("material", "we43_mg")
     site = payload.get("site", "cancellous")
-    seed = int(payload.get("seed", 42))
     if material not in MATERIALS:
         return {"error": f"unknown material: {material}", "materials": list(MATERIALS)}
     if site not in SITES:
         return {"error": f"unknown site: {site}", "sites": list(SITES)}
-    return design(material=material, site=site, seed=seed)
+
+    try:
+        return design(
+            material=material,
+            site=site,
+            seed=int(payload.get("seed", 42)),
+            defect_length_mm=float(payload.get("defect_length_mm", 40)),
+            canal_diameter_mm=float(payload.get("canal_diameter_mm", 18)),
+            cortical_ratio=float(payload.get("cortical_ratio", 0.35)),
+        )
+    except (TypeError, ValueError) as exc:
+        return {"error": f"invalid patient geometry: {exc}"}
 
 
-app.mount("/", StaticFiles(directory=os.path.join(HERE, "static"), html=True), name="static")
+app.mount(
+    "/",
+    StaticFiles(directory=os.path.join(HERE, "static"), html=True),
+    name="static",
+)

@@ -3,132 +3,233 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>AI4Bone · 可降解金属植入物设计</title>
+<title>AI4Bone｜患者特异性可降解金属植入物设计</title>
 <style>
-  :root { --bg:#f6f8fb; --card:#ffffff; --ink:#1a2332; --muted:#6b7686; --accent:#2563eb; --accent2:#0ea5a4; --line:#e4e9f0; --ok:#16a34a; --warn:#d97706; }
-  * { box-sizing:border-box; }
-  body { margin:0; font-family:"Microsoft YaHei",-apple-system,"Segoe UI",sans-serif; background:var(--bg); color:var(--ink); }
-  .wrap { max-width:1080px; margin:0 auto; padding:32px 20px 60px; }
-  header h1 { margin:0 0 6px; font-size:26px; letter-spacing:.3px; }
-  header p { margin:0 0 26px; color:var(--muted); font-size:14px; line-height:1.7; }
-  .grid { display:grid; grid-template-columns:340px 1fr; gap:20px; align-items:start; }
-  @media (max-width:820px){ .grid{grid-template-columns:1fr;} }
-  .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:20px; box-shadow:0 1px 2px rgba(16,24,40,.04); }
-  .card h2 { margin:0 0 14px; font-size:15px; }
-  label { display:block; font-size:13px; color:var(--muted); margin:14px 0 6px; }
-  select, button { width:100%; padding:10px 12px; font-size:14px; border:1px solid var(--line); border-radius:9px; background:#fff; font-family:inherit; }
-  select:focus, button:focus { outline:2px solid rgba(37,99,235,.25); border-color:var(--accent); }
-  button.primary { margin-top:20px; background:var(--accent); color:#fff; border:none; font-weight:600; cursor:pointer; }
-  button.primary:hover { background:#1d4ed8; }
-  button.primary:disabled { opacity:.55; cursor:wait; }
-  .hint { font-size:12px; color:var(--muted); margin-top:8px; line-height:1.6; }
-  .target-box { background:#f0f7f7; border:1px solid #cfe6e6; border-radius:9px; padding:12px 14px; font-size:13px; }
-  .target-box b { color:var(--accent2); }
-  table { width:100%; border-collapse:collapse; margin-top:8px; font-size:13px; }
-  th, td { padding:8px 6px; text-align:left; border-bottom:1px solid var(--line); }
-  th { color:var(--muted); font-weight:600; }
-  .tag { display:inline-block; padding:2px 8px; border-radius:20px; font-size:12px; }
-  .tag.mg { background:#e0ecfe; color:#1d4ed8; }
-  .tag.zn { background:#e6f7ef; color:#0f7a54; }
-  .empty { color:var(--muted); font-size:13px; padding:18px 0; }
-  .foot { margin-top:26px; color:var(--muted); font-size:12px; line-height:1.8; }
-  .spin { display:inline-block; width:14px; height:14px; border:2px solid rgba(255,255,255,.4); border-top-color:#fff; border-radius:50%; animation:sp .7s linear infinite; vertical-align:-2px; margin-right:6px; }
-  @keyframes sp { to { transform:rotate(360deg); } }
+:root{--bg:#f3f7fb;--card:#fff;--ink:#152238;--muted:#64748b;--blue:#1769d2;--cyan:#0891b2;--line:#dce6f1;--orange:#e76f32;--shadow:0 12px 30px rgba(33,76,125,.08)}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Microsoft YaHei","Segoe UI",sans-serif;background:linear-gradient(180deg,#eef6ff 0,#f7fafc 360px);color:var(--ink)}
+.wrap{max-width:1180px;margin:auto;padding:34px 22px 64px}
+header{display:flex;justify-content:space-between;gap:28px;align-items:flex-end;margin-bottom:22px}
+header h1{font-size:32px;margin:0 0 8px;letter-spacing:.2px}
+header p{margin:0;color:var(--muted);line-height:1.75;max-width:800px}
+.badge{white-space:nowrap;background:#e5f1ff;color:#0758b7;border:1px solid #bdd9fa;border-radius:999px;padding:8px 13px;font-size:12px;font-weight:700}
+.card{background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow)}
+.workflow{overflow:hidden;margin-bottom:20px}
+.workflow img{display:block;width:100%;aspect-ratio:16/9;object-fit:cover}
+.workflow-copy{padding:18px 22px 20px}
+.workflow-copy h2{margin:0 0 6px;font-size:18px}
+.workflow-copy p{margin:0;color:var(--muted);font-size:13px;line-height:1.7}
+.steps{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:15px}
+.step{border-top:3px solid #9bc9f2;padding:9px 6px 0;font-size:12px;color:#38506e}
+.step b{display:block;color:var(--blue);margin-bottom:3px}
+.main{display:grid;grid-template-columns:360px 1fr;gap:20px;align-items:start}
+.panel{padding:20px}
+.panel h2{font-size:17px;margin:0 0 14px}
+label{display:block;color:var(--muted);font-size:12px;margin:13px 0 6px}
+select,input,button{width:100%;font:inherit;border-radius:9px;border:1px solid var(--line);padding:10px 11px;background:#fff;color:var(--ink)}
+input[type=file]{font-size:12px;padding:8px}
+.triple{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+button{margin-top:18px;background:linear-gradient(135deg,#1769d2,#0b8eb3);border:0;color:white;font-weight:700;cursor:pointer}
+button:disabled{opacity:.55;cursor:wait}
+.hint{font-size:12px;color:var(--muted);line-height:1.65;margin-top:8px}
+.local-file{color:#0b7285;font-size:12px;margin-top:6px;min-height:18px}
+.target{padding:12px 14px;background:#eff8ff;border:1px solid #cde6fb;border-radius:10px;font-size:13px;line-height:1.7}
+.target strong{color:#0758b7}
+.section-title{margin:18px 0 8px;font-size:13px;color:#344963}
+.zones{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.zone{padding:12px;border:1px solid var(--line);border-radius:10px;background:#fbfdff}
+.zone h3{font-size:13px;margin:0 0 7px;color:#1769d2}
+.zone p{font-size:11px;color:var(--muted);line-height:1.55;margin:3px 0}
+.zone .bar{height:7px;border-radius:8px;background:#e5eef7;overflow:hidden;margin:8px 0}
+.zone .bar i{display:block;height:100%;background:linear-gradient(90deg,#78b9ed,#0c89a5)}
+.results-layout{display:grid;grid-template-columns:1fr 220px;gap:18px;align-items:start}
+table{border-collapse:collapse;width:100%;font-size:12px}
+th,td{padding:8px 6px;text-align:left;border-bottom:1px solid var(--line)}
+th{color:var(--muted);font-weight:600}
+.matrix-title{font-size:12px;color:var(--muted);margin-bottom:8px}
+.matrix-layers{display:flex;gap:8px}
+.layer{display:grid;grid-template-columns:repeat(3,22px);gap:3px}
+.voxel{width:22px;height:22px;border-radius:4px;border:1px solid rgba(25,74,115,.12)}
+.legend{font-size:10px;color:var(--muted);margin-top:7px}
+.empty{color:var(--muted);font-size:13px;padding:24px 0}
+.foot{font-size:12px;color:var(--muted);line-height:1.7;margin-top:20px;padding:0 4px}
+.spin{display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,.45);border-top-color:white;border-radius:50%;animation:spin .7s linear infinite;vertical-align:-2px;margin-right:6px}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media(max-width:900px){header{display:block}.badge{display:inline-block;margin-top:14px}.main{grid-template-columns:1fr}.steps{grid-template-columns:1fr}.results-layout{grid-template-columns:1fr}.zones{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <header>
-    <h1>AI4Bone · 可降解金属植入物个性化设计</h1>
-    <p>面向镁/锌可降解金属骨植入物的结构设计与多目标优化工具（GOAI 前沿探索赛道演示）。选择合金与骨部位，生成与骨组织模量匹配、降解周期接近成骨周期的候选结构。</p>
-  </header>
+<header>
+  <div>
+    <h1>AI4Bone</h1>
+    <p>以患者影像为入口，将缺损几何、局部骨质和力学目标转化为空间梯度孔隙结构，并在镁合金或锌合金场景中完成候选结构筛选与可制造性评估。</p>
+  </div>
+  <div class="badge">GOAI · AI for Research</div>
+</header>
 
-  <div class="grid">
-    <div class="card">
-      <h2>设计参数</h2>
-      <label for="alloy">合金材料</label>
-      <select id="alloy"></select>
-      <label for="site">骨部位</label>
-      <select id="site"></select>
-      <button class="primary" id="run">生成设计方案</button>
-      <div class="hint" id="metaHint">加载中…</div>
-    </div>
-
-    <div class="card">
-      <h2>设计方案（Top 5 · 有限元验证，合成物理演示）</h2>
-      <div id="target"></div>
-      <div id="results"><div class="empty">选择参数后点击「生成设计方案」。</div></div>
+<section class="card workflow">
+  <img src="/assets/patient_specific_pipeline.png" alt="患者CT、缺损分割、分区结构、梯度多孔植入物和增材制造流程">
+  <div class="workflow-copy">
+    <h2>患者影像驱动的非均质结构设计</h2>
+    <p>参考“生基未来”PPT 的影像重建与非均质打印路径，AI4Bone 将患者特异性几何信息直接映射为可计算、可验证、可打印的结构参数。</p>
+    <div class="steps">
+      <div class="step"><b>01 影像输入</b>DICOM / CT 质量控制</div>
+      <div class="step"><b>02 缺损分割</b>皮质骨、松质骨与缺损区</div>
+      <div class="step"><b>03 空间分区</b>近端、核心、远端界面</div>
+      <div class="step"><b>04 梯度结构</b>孔隙率、孔径与杆径联合变化</div>
+      <div class="step"><b>05 打印验证</b>有限元、LPBF 与体外评价</div>
     </div>
   </div>
+</section>
 
-  <div class="foot">
-    说明：当前后端使用合成物理模型演示完整流程；正式版将替换为公开数据集（Zenodo records/17672235，600 样本）、真实有限元输出与 CNN 代理模型（3×3×3 孔隙率体素化为 60³，卷积 16/8/4@3³，全连接 64/32）。LPBF 工艺建议：40–100 W，400–1200 mm/s。
-  </div>
+<div class="main">
+  <section class="card panel">
+    <h2>患者与材料参数</h2>
+    <label for="imageFile">患者影像（演示版本地预览）</label>
+    <input id="imageFile" type="file" accept=".dcm,.nii,.gz,.zip,image/*">
+    <div class="local-file" id="fileState">尚未选择文件；可直接使用示例参数。</div>
+
+    <label for="alloy">合金体系</label>
+    <select id="alloy"></select>
+    <label for="site">骨组织目标</label>
+    <select id="site"></select>
+
+    <div class="triple">
+      <div>
+        <label for="defectLength">缺损长度（mm）</label>
+        <input id="defectLength" type="number" min="10" max="120" step="1" value="40">
+      </div>
+      <div>
+        <label for="canalDiameter">髓腔直径（mm）</label>
+        <input id="canalDiameter" type="number" min="6" max="40" step="0.5" value="18">
+      </div>
+    </div>
+    <label for="corticalRatio">皮质骨比例（0.10–0.80）</label>
+    <input id="corticalRatio" type="number" min="0.10" max="0.80" step="0.05" value="0.35">
+
+    <button id="run">生成患者特异性结构方案</button>
+    <div class="hint" id="metaHint">正在读取材料库……</div>
+  </section>
+
+  <section class="card panel">
+    <h2>设计结果</h2>
+    <div id="target"><div class="empty">设置患者参数后生成候选结构。</div></div>
+    <div class="section-title">空间分区与非均质打印参数</div>
+    <div id="zones" class="zones"></div>
+    <div class="section-title">候选结构（Top 5）</div>
+    <div id="results"><div class="empty">尚未运行。</div></div>
+  </section>
+</div>
+
+<div class="foot">
+  边界说明：当前版本以几何参数代替真实 DICOM 分割，并使用合成物理模型演示完整流程。正式版本将接入匿名化 DICOM/NIfTI、分割模型、真实有限元结果及打印验证数据。默认采用单一合金体系内的空间梯度结构，避免将尚未验证的镁/锌多材料共打印作为既定能力。
+</div>
 </div>
 
 <script>
-const $ = (id) => document.getElementById(id);
-const esc = (s) => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const $ = id => document.getElementById(id);
+const esc = value => String(value).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
-async function loadMeta() {
-  try {
-    const r = await fetch('/api/meta');
-    const m = await r.json();
-    const al = $('alloy'); al.innerHTML = '';
-    Object.entries(m.alloys).forEach(([k, v]) => {
-      al.appendChild(new Option(`${v.name}（${v.family.toUpperCase()}）`, k));
+async function loadMeta(){
+  try{
+    const response = await fetch('/api/meta');
+    const meta = await response.json();
+    Object.entries(meta.alloys).forEach(([key,value]) => {
+      $('alloy').appendChild(new Option(`${value.name}（${value.family.toUpperCase()}）`,key));
     });
-    const st = $('site'); st.innerHTML = '';
-    Object.entries(m.sites).forEach(([k, v]) => {
-      st.appendChild(new Option(`${k} · 目标E=${v.E_MPa} MPa · ${v.T_min_days}-${v.T_max_days}天`, k));
+    Object.entries(meta.sites).forEach(([key,value]) => {
+      $('site').appendChild(new Option(`${key}｜目标 E=${value.E_MPa} MPa｜${value.T_min_days}–${value.T_max_days} 天`,key));
     });
-    const a = m.alloys[al.value];
-    $('metaHint').innerHTML = `WE43 镁：E=${a.E_MPa} MPa · YS=${a.yield_MPa} MPa；锌场景同管线切换材料参数即可。`;
-  } catch (e) {
-    $('metaHint').innerHTML = '后端未连接，请先运行 uvicorn。';
+    $('metaHint').textContent='镁/锌使用同一结构设计框架，材料参数分别进入力学与降解计算。';
+  }catch(error){
+    $('metaHint').textContent='后端未连接，请先启动本地服务。';
   }
 }
 
-function drawTarget(t, matName) {
-  $('target').innerHTML = `
-    <div class="target-box">
-      目标（<b>${esc(matName)}</b> · ${esc(t.site_note)}）：
-      弹性模量 <b>${t.E_MPa} MPa</b> ｜ 降解周期 <b>${t.T_min_days}–${t.T_max_days} 天</b> ｜ 追求高屈服强度
-    </div>`;
+$('imageFile').addEventListener('change', event => {
+  const file=event.target.files[0];
+  $('fileState').textContent=file ? `已选择：${file.name}（演示版不会上传患者数据）` : '尚未选择文件；可直接使用示例参数。';
+});
+
+function renderTarget(data){
+  const p=data.patient_geometry;
+  $('target').innerHTML=`<div class="target">
+    材料：<strong>${esc(data.material_name)}</strong>；目标区域：<strong>${esc(data.target.site_note)}</strong><br>
+    缺损包络：${p.defect_length_mm} mm × ${p.canal_diameter_mm} mm，估算体积 ${p.estimated_envelope_volume_mm3} mm³；
+    目标模量 <strong>${data.target.E_MPa} MPa</strong>，降解周期 <strong>${data.target.T_min_days}–${data.target.T_max_days} 天</strong>。
+  </div>`;
 }
 
-function drawResults(cands, lpbf) {
-  const rows = cands.map(c => `
-    <tr>
-      <td>${c.score.toFixed(3)}</td>
-      <td>${c.E_MPa.toFixed(0)}</td>
-      <td>${c.YS_MPa.toFixed(1)}</td>
-      <td>${c.T_deg_days.toFixed(0)}</td>
-      <td>${(c.porosity_mean * 100).toFixed(1)}%</td>
-    </tr>`).join('');
-  $('results').innerHTML = `
+function renderZones(zones){
+  $('zones').innerHTML=zones.map(zone => `<div class="zone">
+    <h3>${esc(zone.name)}</h3>
+    <div class="bar"><i style="width:${Math.round(zone.porosity_target*100)}%"></i></div>
+    <p>孔隙率：${(zone.porosity_target*100).toFixed(1)}%</p>
+    <p>孔径：${zone.pore_size_um[0]}–${zone.pore_size_um[1]} μm</p>
+    <p>杆径：${zone.strut_size_um[0]}–${zone.strut_size_um[1]} μm</p>
+    <p>${esc(zone.design_role)}</p>
+  </div>`).join('');
+}
+
+function voxelColor(value){
+  const light=88-Math.round(value*33);
+  return `hsl(199 68% ${light}%)`;
+}
+
+function renderMatrix(matrix){
+  return `<div>
+    <div class="matrix-title">最佳候选：3 × 3 × 3 空间孔隙率</div>
+    <div class="matrix-layers">${matrix.map(layer => `<div class="layer">${layer.flat().map(value => `<div class="voxel" title="孔隙率 ${value}" style="background:${voxelColor(value)}"></div>`).join('')}</div>`).join('')}</div>
+    <div class="legend">浅色＝低孔隙率；深色＝高孔隙率</div>
+  </div>`;
+}
+
+function renderResults(data){
+  const rows=data.candidates.map(candidate => `<tr>
+    <td>${candidate.score.toFixed(3)}</td>
+    <td>${candidate.E_MPa.toFixed(0)}</td>
+    <td>${candidate.YS_MPa.toFixed(1)}</td>
+    <td>${candidate.T_deg_days.toFixed(0)}</td>
+    <td>${(candidate.porosity_mean*100).toFixed(1)}%</td>
+  </tr>`).join('');
+  $('results').innerHTML=`<div class="results-layout">
     <table>
-      <tr><th>评分</th><th>模量 E (MPa)</th><th>屈服强度 (MPa)</th><th>降解周期 (天)</th><th>平均孔隙率</th></tr>
-      ${rows}
+      <thead><tr><th>评分</th><th>E (MPa)</th><th>YS (MPa)</th><th>降解（天）</th><th>孔隙率</th></tr></thead>
+      <tbody>${rows}</tbody>
     </table>
-    <div class="hint">LPBF 工艺建议：${lpbf.power_W[0]}–${lpbf.power_W[1]} W，${lpbf.speed_mm_per_s[0]}–${lpbf.speed_mm_per_s[1]} mm/s。</div>`;
+    ${renderMatrix(data.candidates[0].matrix_3x3x3)}
+  </div>
+  <div class="hint">LPBF 初筛窗口：${data.lpbf.power_W[0]}–${data.lpbf.power_W[1]} W，${data.lpbf.speed_mm_per_s[0]}–${data.lpbf.speed_mm_per_s[1]} mm/s。该窗口需通过设备与粉末标定后使用。</div>`;
 }
 
-$('run').addEventListener('click', async () => {
-  const btn = $('run'); btn.disabled = true; btn.innerHTML = '<span class="spin"></span>设计中…';
-  try {
-    const r = await fetch('/api/design', {
-      method: 'POST', headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({material: $('alloy').value, site: $('site').value, seed: 42}),
+$('run').addEventListener('click',async()=>{
+  const button=$('run');
+  button.disabled=true;
+  button.innerHTML='<span class="spin"></span>正在生成结构';
+  try{
+    const response=await fetch('/api/design',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        material:$('alloy').value,
+        site:$('site').value,
+        defect_length_mm:Number($('defectLength').value),
+        canal_diameter_mm:Number($('canalDiameter').value),
+        cortical_ratio:Number($('corticalRatio').value),
+        seed:42
+      })
     });
-    const d = await r.json();
-    if (d.error) { $('results').innerHTML = `<div class="empty">${esc(d.error)}</div>`; return; }
-    drawTarget(d.target, d.material_name);
-    drawResults(d.candidates, d.lpbf);
-  } catch (e) {
-    $('results').innerHTML = `<div class="empty">请求失败：${esc(e.message)}</div>`;
-  } finally {
-    btn.disabled = false; btn.textContent = '生成设计方案';
+    const data=await response.json();
+    if(data.error) throw new Error(data.error);
+    renderTarget(data);
+    renderZones(data.patient_geometry.zones);
+    renderResults(data);
+  }catch(error){
+    $('results').innerHTML=`<div class="empty">运行失败：${esc(error.message)}</div>`;
+  }finally{
+    button.disabled=false;
+    button.textContent='生成患者特异性结构方案';
   }
 });
 
